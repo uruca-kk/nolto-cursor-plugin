@@ -52,9 +52,20 @@ Cursor マーケットプレイス公開後は、`Add to Cursor` で同梱の `m
 
 `~/.cursor/mcp.json` に `nolto`（url のみ）を入れた状態で最初に MCP ツールを呼ぶと、Cursor ネイティブの OAuth 2.1 + PKCE 同意画面がブラウザで開きます（コールバック: `cursor://anysphere.cursor-mcp/oauth/callback`）。承認するとトークンが Cursor に保存されます。install.sh が書き込むのはこの url-only エントリです。
 
-### ヘッドレス / CI — Personal API Token
+### 推奨: `nolto login`（device-code フロー）
 
-SSH リモート・コンテナ・CI などブラウザを開けない環境では、OAuth の代わりに Personal API Token を使います（実機の `cursor-agent --print` で動作確認済み）。
+SSH リモート・コンテナ・CI などブラウザを開けない環境では OAuth が完了できません。[`@nolto/cli`](https://www.npmjs.com/package/@nolto/cli)（>= 0.3.0）の `nolto login` は、**別端末（スマホ・ラップトップ）のブラウザ**で承認するだけで済みます。
+
+```bash
+npm install -g @nolto/cli
+nolto login --client cursor
+```
+
+表示 URL を任意の端末で承認すると、トークンを取得して `~/.cursor/mcp.json` の `nolto` に Bearer ヘッダを書き込みます。手動でトークンを扱う必要はありません。
+
+### 代替: Personal API Token を手動で渡す
+
+OAuth の代わりに Personal API Token を直接設定します（実機の `cursor-agent --print` で動作確認済み）。
 
 1. [設定 > API トークン](https://nolto.app/settings/tokens) でトークンを発行します。
 2. `~/.cursor/mcp.json`（or `.cursor/mcp.json`）の `nolto` に、環境変数経由でヘッダーを追加します（install.sh は url のみを書き込むので、ヘッダーはここで手動追加）:

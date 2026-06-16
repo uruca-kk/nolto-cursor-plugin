@@ -64,7 +64,7 @@ get_plan({ planId: "<uuid>" })
 
 | エラー | 対処 |
 |--------|------|
-| `401 Unauthorized` | OAuth トークンが切れています。Cursor の MCP 設定で nolto を再接続するようユーザーに案内してください。 |
+| `401 Unauthorized` | 認証が切れています。**ヘッドレス環境では `nolto login --client cursor`**（`@nolto/cli` >= 0.3.0）で再認証、デスクトップは Cursor の MCP 設定で nolto を再接続するようユーザーに案内してください。 |
 | `429 Too Many Requests` | `Retry-After` ヘッダーの秒数だけ待ってから再試行します。 |
 | デフォルトプロジェクト未設定 | `list_projects` で一覧を表示し、`set_default_project` の設定を案内します。 |
 

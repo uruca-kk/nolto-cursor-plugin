@@ -127,7 +127,7 @@ function checkPlugin() {
   else if (d.name !== "nolto") fail(f, `name must be "nolto", got: "${d.name}"`);
 
   if (!/^\d+\.\d+\.\d+$/.test(d.version)) fail(f, `version must be semver, got: ${JSON.stringify(d.version)}`);
-  if (d.version !== "0.1.0") fail(f, `version must be "0.1.0", got: "${d.version}"`);
+  if (d.version !== "0.1.1") fail(f, `version must be "0.1.1", got: "${d.version}"`);
 
   // Cursor uses top-level displayName (not nested under an interface object)
   if (typeof d.displayName !== "string" || !d.displayName)
@@ -179,7 +179,7 @@ function checkMarketplace() {
   if (e.name !== "nolto") w(`plugins[0].name must be "nolto"`);
   // Cursor flat layout: source is the string "./"
   if (e.source !== "./") w(`plugins[0].source must be "./" (flat layout), got: ${JSON.stringify(e.source)}`);
-  if (e.version !== "0.1.0") w(`plugins[0].version must be "0.1.0", got: "${e.version}"`);
+  if (e.version !== "0.1.1") w(`plugins[0].version must be "0.1.1", got: "${e.version}"`);
   if (!e.description) w("plugins[0].description must be non-empty");
 }
 

@@ -71,7 +71,7 @@ register_plan({
 
 | エラー | 対処 |
 |--------|------|
-| `401 Unauthorized` | OAuth トークンが切れています。Cursor の MCP 設定で nolto を再接続するようユーザーに案内してください。 |
+| `401 Unauthorized` | 認証が切れています。**ヘッドレス環境では `nolto login --client cursor`**（`@nolto/cli` >= 0.3.0）で再認証、デスクトップは Cursor の MCP 設定で nolto を再接続するようユーザーに案内してください。 |
 | `429 Too Many Requests` | `Retry-After` ヘッダーの秒数だけ待ってから再試行します。 |
 | バリデーションエラー | どのフィールドが上限を超えたか（タイトル 500 文字超、フェーズ数 50 超など）を明示してユーザーに確認します。 |
 | projectId 未指定 | `list_projects` を呼んで一覧を示し、選択を求めます。 |
