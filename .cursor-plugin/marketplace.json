@@ -1,0 +1,14 @@
+{
+  "name": "nolto",
+  "owner": { "name": "uruca-kk", "email": "fukuda@uruca.jp" },
+  "plugins": [
+    {
+      "name": "nolto",
+      "source": "./",
+      "description": "Hosted MCP server + skills for registering and tracking Nolto plans from Cursor.",
+      "version": "0.1.0",
+      "category": "project-management",
+      "keywords": ["nolto", "mcp", "plan-management", "cursor"]
+    }
+  ]
+}
