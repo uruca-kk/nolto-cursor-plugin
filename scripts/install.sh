@@ -66,14 +66,14 @@ if [ -f "$hooks_target" ]; then
     ($cur // {}) + {
       version: 1,
       hooks: (($cur.hooks // {}) + {
-        stop: ((($cur.hooks.stop // []) | map(select(.command != "nolto flush --detach"))) + $new.hooks.stop)
+        stop: ((($cur.hooks.stop // []) | map(select((.command // "") | contains("nolto flush") | not))) + $new.hooks.stop)
       })
     }')"
 else
   merged="$new_hooks"
 fi
 printf '%s\n' "$merged" > "$hooks_target"
-echo "  hook:  stop -> ${hooks_target} (nolto flush --detach)"
+echo "  hook:  stop -> ${hooks_target} (nolto flush at session end)"
 
 cat <<'EONOTE'
 

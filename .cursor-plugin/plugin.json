@@ -1,7 +1,7 @@
 {
   "name": "nolto",
   "displayName": "Nolto",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Register vibe-coded plans, report phase progress, and inspect plan status from Cursor via the hosted Nolto MCP server.",
   "author": { "name": "uruca-kk", "email": "fukuda@uruca.jp", "url": "https://nolto.app" },
   "homepage": "https://nolto.app",

@@ -52,13 +52,13 @@ get_plan({ planId: "<uuid>" })
 | `done` | 完了 |
 | `discarded` | 破棄 |
 
-### 4. デフォルトプロジェクト未設定の場合
+### 4. projectId の確認
 
-`list_plans` に `projectId` を渡さないとデフォルトプロジェクトが使われます。デフォルトが未設定でエラーになった場合は、`set_default_project` の設定を提案してください。
+`list_plans`、`get_plan` には `projectId` を渡すことを推奨します。
 
-```
-> デフォルトプロジェクトを設定してほしい場合は「Nolto のデフォルトプロジェクトを my-app に設定して」と伝えてください。
-```
+1. リポジトリ root の `nolto.json` を確認します。あれば `projectId` フィールドを使います。
+2. `nolto.json` がない場合: `list_projects` で一覧を取得し、ユーザーに選んでもらいます。読み取り操作ではデフォルトプロジェクトも使えます。
+3. 「`nolto.json` をリポジトリ root に作成すると、次回から自動で使われます」と案内してください（または `nolto link <id>` を案内）。
 
 ## エラー処理
 
@@ -66,7 +66,7 @@ get_plan({ planId: "<uuid>" })
 |--------|------|
 | `401 Unauthorized` | 認証が切れています。**ヘッドレス環境では `nolto login --client cursor`**（`@nolto/cli` >= 0.3.0）で再認証、デスクトップは Cursor の MCP 設定で nolto を再接続するようユーザーに案内してください。 |
 | `429 Too Many Requests` | `Retry-After` ヘッダーの秒数だけ待ってから再試行します。 |
-| デフォルトプロジェクト未設定 | `list_projects` で一覧を表示し、`set_default_project` の設定を案内します。 |
+| デフォルトプロジェクト未設定 | `list_projects` で一覧を表示し、`projectId` を明示するか `nolto.json` 作成を案内します。 |
 
 ## 関連スキル
 

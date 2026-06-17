@@ -58,11 +58,20 @@ record_plan_review({
 
 **有効な verdict 値**: `go`（GO・承認） / `no_go`（NO-GO・差し戻し）
 
+## projectId の確認
+
+すべての書き込み操作に `projectId` を明示して渡してください。
+
+1. リポジトリ root の `nolto.json` を確認します。あれば `projectId` フィールドを使います。
+2. `nolto.json` がない場合は `list_projects` で一覧を取得し、ユーザーに選んでもらいます。その後 root に `nolto.json` を作成することを提案します（または `nolto link <id>` を案内）。
+
+**注意**: 複数プロジェクトに参加しているユーザーが `projectId` を省略すると、サーバーがエラーを返します。
+
 ## planId / phaseId の特定
 
 planId や phaseId が手元にない場合は以下の手順で取得します:
 
-1. `list_plans` でプラン一覧を取得し、対象プランの `planId` を確認する。
+1. `list_plans` でプラン一覧を取得し（`projectId` を明示）、対象プランの `planId` を確認する。
 2. `get_plan` でプラン詳細を取得し、フェーズ一覧と各 `phaseId` を確認する。
 
 ## メッセージ / サマリーの長さ
@@ -77,8 +86,9 @@ planId や phaseId が手元にない場合は以下の手順で取得します:
 | `429 Too Many Requests` | `Retry-After` ヘッダーの秒数だけ待ってから再試行します。 |
 | 状態遷移エラー | サーバーから返ったエラーメッセージをそのままユーザーに表示します。 |
 | 無効な verdict / status | 上記の有効値一覧を確認し、正しい値でリトライします。 |
+| 複数プロジェクトで projectId 省略 | `nolto.json` を root に作成するか（`{ "projectId": "<uuid>" }`）、`projectId` を明示して再試行します。 |
 
-## キュー版 (オプトイン)
+## キュー版 (オプトイン・CLI が必要)
 
 セッション終了時にまとめて送りたい場合は、ダイレクト呼び出しの代わりに `nolto queue` コマンドを使ってください:
 
@@ -88,6 +98,11 @@ nolto queue phase-test <planId> <phaseId> passed --round 1
 nolto queue plan-status <planId> done
 nolto queue plan-review <planId> go
 ```
+
+**前提の確認 — キュー版を使う前に必ず実施**: `nolto queue` も flush も CLI コマンドなので、`@nolto/cli` が未インストールだと使えません。キュー版を提案・実行する前に `command -v nolto`（または `nolto --version`）で導入済みか確認してください。
+
+- **CLI が無い場合**: キュー版にフォールバックせず、**上記 A/B/C のダイレクト MCP 呼び出しをそのまま使ってください**。そのうえでユーザーに一言、「セッション終了時にまとめて送りたい場合は `npm i -g @nolto/cli` で CLI を入れて `nolto init` でトークンを設定すると、Stop フックが自動送信します」と案内してください。エラーとして扱わないこと（CLI 不在は正常な構成です）。
+- **CLI がある場合のみ**キュー版を使ってください。
 
 **注意**: ダイレクト呼び出しとキュー版を**同じ更新に対して両方使わないでください**（二重送信になります）。`entry.id` による サーバー側の重複排除は現バージョンのスコープ外です。
 

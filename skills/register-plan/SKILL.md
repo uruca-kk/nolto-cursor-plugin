@@ -21,12 +21,24 @@ description: Use when the user asks to register a plan in Nolto from Cursor, sha
 
 ### 3. projectId を確認する
 
-`register_plan` には `projectId` が必要です。ただし、デフォルトプロジェクトが設定済みの場合は `projectId` を省略できます。
+`register_plan` には `projectId` を毎回明示して渡してください。
 
-- **デフォルト設定済みの場合**: `projectId` なしで `register_plan` を呼び出せます。手順 4 へ進んでください。
-- **デフォルト未設定の場合（または確認したい場合）**: `list_projects` でプロジェクト一覧を取得し、どのプロジェクトに登録するかユーザーに選んでもらい、選択したプロジェクトの UUID を `projectId` として渡します。
-- **サーバーが `projectId required / no default project` エラーを返した場合**: `list_projects` を呼んで一覧を示し、再試行します。
-- **将来の呼び出しでデフォルトを固定したい場合**: ユーザーが「デフォルトプロジェクトを設定したい」と明示したときのみ `set_default_project` を使います（プロジェクト UUID が必要です）。
+**最初にリポジトリ root の `nolto.json` を確認します。**
+
+1. リポジトリ root（`.git` があるディレクトリ）に `nolto.json` が存在するか確認します。
+2. **`nolto.json` がある場合**: そのファイルの `projectId` フィールドを使い、すべての呼び出しに `projectId` を明示します。手順 4 へ進んでください。
+3. **`nolto.json` がない場合**:
+   - `list_projects` でプロジェクト一覧を取得し、どのプロジェクトに登録するかユーザーに選んでもらいます。
+   - リポジトリ root に `nolto.json` を作成することを提案します:
+     ```json
+     { "projectId": "<選んだ UUID>" }
+     ```
+   - または `nolto link <projectId>` コマンド（`@nolto/cli` が必要）を案内してください。
+   - 「コミットするとチーム全員に紐付けが共有されます」と補足します。
+
+**注意**: 複数のプロジェクトに参加しているユーザーが `projectId` を省略したまま書き込み操作を呼び出すと、サーバーがエラーを返します。`nolto.json` または明示的な `projectId` が必要です。
+
+- **`set_default_project` の用途**: 読み取り操作（`list_plans`、`get_plan`）のデフォルト設定として機能します。複数プロジェクトの書き込みには効きません。
 
 ### 4. register_plan を呼び出す
 
@@ -74,9 +86,92 @@ register_plan({
 | `401 Unauthorized` | 認証が切れています。**ヘッドレス環境では `nolto login --client cursor`**（`@nolto/cli` >= 0.3.0）で再認証、デスクトップは Cursor の MCP 設定で nolto を再接続するようユーザーに案内してください。 |
 | `429 Too Many Requests` | `Retry-After` ヘッダーの秒数だけ待ってから再試行します。 |
 | バリデーションエラー | どのフィールドが上限を超えたか（タイトル 500 文字超、フェーズ数 50 超など）を明示してユーザーに確認します。 |
-| projectId 未指定 | `list_projects` を呼んで一覧を示し、選択を求めます。 |
+| projectId 未指定（単一プロジェクト） | `list_projects` を呼んで一覧を示し、選択を求めます。 |
+| 複数プロジェクトで projectId 省略 | サーバーがエラーを返します。`nolto.json` を root に作成するか（`{ "projectId": "<uuid>" }`）、`projectId` を明示して再試行します。 |
 
 ## 関連スキル
 
 - **report-progress** — 登録後にフェーズのステータスやテスト結果を更新するときに使います。
 - **plan-status** — プランの進捗を非エンジニア向けに要約するときに使います。
+
+---
+
+## Form 1: 構造化済みプランを直接登録する (`register_structured_plan`)
+
+### いつ使うか vs `register_plan`
+
+| | `register_plan` | `register_structured_plan` |
+|---|---|---|
+| 入力 | raw markdown | raw markdown + StructuredPlan (2-level) |
+| haiku 抽出ステップ | あり | **なし（スキップ）** |
+| sonnet 要約ステップ | あり | あり |
+| 課金 | 1 トランスフォーム | 1 トランスフォーム（同じ） |
+
+AI ツールが既に構造化処理を済ませており、`StructuredPlan` オブジェクトを持っている場合に使います。haiku 抽出が不要になるため処理が速くなります。**構造が不正な場合はエラーで拒否されます（`register_plan` へのフォールバックはありません）。**
+
+### StructuredPlan の形式とサイズ上限
+
+```
+StructuredPlan = {
+  plan: {
+    title: string,          // 最大 500 文字
+    scale?: string | null,  // 規模表記（任意）
+    status: "not_started" | "in_progress" | "done"  // 3値のみ（"discarded" は不可）
+  },
+  groups: Array<{           // 最大 50 グループ
+    id: string,             // 最大 256 文字
+    label: string,          // 最大 500 文字
+    status: "not_started" | "in_progress" | "done",
+    body_md?: string | null,  // 最大 20,000 文字
+    tasks: Array<{            // 1グループあたり最大 100 タスク
+      id: string,
+      label: string,
+      status: "not_started" | "in_progress" | "done",
+      body_md?: string | null,
+      depends_on?: string[],
+      diff?: string | null
+    }>
+  }>,
+  context_sections: Array<{  // 最大 50 セクション
+    id: string,
+    label: string,
+    kind: "confirmed_decisions" | "open_questions" | "other",
+    body_md: string          // 最大 20,000 文字
+  }>
+}
+```
+
+**重要**: `status` は 3 値のみ（`not_started` / `in_progress` / `done`）。`discarded` は StructuredPlan 内では無効です（プラン全体の `plan.status` には `discarded` を指定できます）。
+**重要**: 不明なキーは厳密に拒否されます（`.strict()`）。
+
+### 呼び出しサンプル
+
+```
+register_structured_plan({
+  projectId: "<uuid>",
+  plan: {
+    title: "My Feature Plan",
+    content: "<ファイル全文 (raw markdown)>",
+    status: "not_started"
+  },
+  structuredPlan: {
+    plan: { title: "My Feature Plan", status: "not_started" },
+    groups: [
+      {
+        id: "phase-1",
+        label: "Phase 1: セットアップ",
+        status: "not_started",
+        tasks: [
+          { id: "task-1-1", label: "依存関係の追加", status: "not_started" },
+          { id: "task-1-2", label: "DB マイグレーション", status: "not_started" }
+        ]
+      }
+    ],
+    context_sections: []
+  }
+})
+```
+
+### D3 ルール（no-fallback）
+
+`structuredPlan` が無効な場合（サイズ超過・不明キー・`discarded` status など）、サーバーはフィールドパス付きのエラーを返します。`register_plan` に自動でフォールバックすることはありません。エラーメッセージに従い `structuredPlan` を修正して再試行してください。

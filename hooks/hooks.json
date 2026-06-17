@@ -2,7 +2,7 @@
   "version": 1,
   "hooks": {
     "stop": [
-      { "command": "nolto flush --detach", "timeout": 10 }
+      { "command": "if command -v nolto >/dev/null 2>&1; then nolto flush --detach || true; else d=\"${XDG_CONFIG_HOME:-$HOME/.config}/nolto\"; if [ ! -f \"$d/.cli-hint-shown\" ]; then mkdir -p \"$d\" 2>/dev/null || true; : > \"$d/.cli-hint-shown\" 2>/dev/null || true; echo \"Nolto tip: install @nolto/cli (npm i -g @nolto/cli) to auto-send queued progress at session end. (shown once)\" >&2; fi; fi", "timeout": 10 }
     ]
   }
 }
